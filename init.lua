@@ -1,4 +1,4 @@
-player_tracker = {
+ptracker = {
     player_timer = {},
     player_hud_id = {},
 }
@@ -10,12 +10,12 @@ local function formspec_error(name, message)
     minetest.colorize("#FF0000", message))
 end
 
-minetest.register_tool("player_tracker:tracker", {
+minetest.register_tool("ptracker:tracker", {
     description = "Player Tracker",
     inventory_image = "tracker.png",
     on_use = function(itemstack, user, pointed_thing)
         local name = user:get_player_name()
-        local timer = player_tracker.player_timer[name] or 0
+        local timer = ptracker.player_timer[name] or 0
 
         if timer > 0 then
             formspec_error(name, "Still tracking a player!")
@@ -32,12 +32,12 @@ minetest.register_tool("player_tracker:tracker", {
         }
         local formspec = table.concat(formspec, "")
 
-        minetest.show_formspec(name, "player_tracker:tracker", formspec)
+        minetest.show_formspec(name, "ptracker:tracker", formspec)
     end
 })
 
 minetest.register_on_player_receive_fields(function(player, formname, fields)
-    if formname ~= "player_tracker:tracker" then
+    if formname ~= "ptracker:tracker" then
         return
     end
 
@@ -46,7 +46,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
         local name = player:get_player_name()
         tracked_player = fields.tracked_player
 
-        minetest.close_formspec(name, "player_tracker:tracker")
+        minetest.close_formspec(name, "ptracker:tracker")
 
         if not minetest.player_exists(tracked_player) then
             formspec_error(name, "Player is not real!")
@@ -62,12 +62,12 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
         
         
         if tonumber(fields.duration) == nil then
-            player_tracker.player_timer[name] = 10
+            ptracker.player_timer[name] = 10
         else
-            player_tracker.player_timer[name] = tonumber(fields.duration)
+            ptracker.player_timer[name] = tonumber(fields.duration)
         end
 
-        local timer = player_tracker.player_timer[name]
+        local timer = ptracker.player_timer[name]
 
         minetest.chat_send_player(name,
         minetest.colorize("#80FF00", "Tracking " .. tracked_player .. " for " .. tostring(timer) .. " seconds."))
@@ -83,13 +83,13 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
             })
         end
 
-        player_tracker.player_hud_id[name] = tracker_waypoint()
+        ptracker.player_hud_id[name] = tracker_waypoint()
 
         minetest.after(timer, function()
-            player:hud_remove(player_tracker.player_hud_id[name])
+            player:hud_remove(ptracker.player_hud_id[name])
             formspec_error(name, "Stopped tracking " .. tracked_player .. ".")
-            player_tracker.player_hud_id[name] = nil
-            player_tracker.player_timer[name] = -1
+            ptracker.player_hud_id[name] = nil
+            ptracker.player_timer[name] = -1
         end)
     end
 end)
@@ -97,8 +97,8 @@ end)
 minetest.register_globalstep(function(dtime)
     for _, player in pairs(minetest.get_connected_players()) do
         local name = player:get_player_name()
-        local hud_id = player_tracker.player_hud_id[name]
-        if player_tracker.player_timer[name] ~= 0 and hud_id ~= nil then
+        local hud_id = ptracker.player_hud_id[name]
+        if ptracker.player_timer[name] ~= 0 and hud_id ~= nil then
             local tracked_player_ref = minetest.get_player_by_name(tracked_player)
             local pos = tracked_player_ref:get_pos()
             player:hud_change(hud_id, "world_pos", pos)
@@ -109,5 +109,5 @@ end)
 
 minetest.register_on_leaveplayer(function(player)
     local name = player:get_player_name()
-    player_tracker.player_timer[name] = nil
+    ptracker.player_timer[name] = nil
 end)
